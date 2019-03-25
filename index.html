@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+</head>
+<body>
+  <div id="el">
+  <p>{{a}}</p>
+  <div>{{b}}</div>
+  </div>
+
+
+  <script>
+  var vue = new Vue({
+    id: 'el',
+    data:{
+      a:1,
+      b:2
+    }
+  })
+
+  function Vue(options){
+    this.$options = options
+    var data = this._data = this.$options.data
+    this.$el = document.getElementById(options.id)
+    observe(data)
+    Object.keys(data).forEach(key=>{
+       defineReactive(this,key,data[key])
+    })
+   
+    let fragment = createFragment(this.$options.id,this)
+    this.$el.appendChild(fragment)
+  }
+
+  function observe(data){
+       if(typeof data === 'object' && data){
+         
+    Object.keys(data).forEach(key=>{
+      let value = data[key] // 响应式一定要先赋值
+      Object.defineProperty(data, key, {
+        get: function () {
+          return value
+        },
+        set: function (newVal) {
+          if(value === newVal)return
+          value = newVal;
+        }
+      });
+    })
+    }
+  }
+
+  function defineReactive(vm,key,val){
+        Object.defineProperty(vm,key,{
+            get: function(){
+              return val
+            },
+            set: function(newVal){
+             val = newVal
+            }
+        })
+  }
+
+  function createFragment(el,vm){
+    this.$el =  document.getElementById(el)
+    let fragment = document.createDocumentFragment()
+     while(child = this.$el.firstChild){
+       compile(child,vm)
+      fragment.appendChild(child)
+     }
+     return fragment
+  }
+
+  function compile(node,vm){
+    var reg = /\{\{(.*)\}\}/;
+    if(node.nodeType === 3){
+      if(reg.test(node.nodeValue)){
+        name = RegExp.$1;
+        new Watcher(vm,function(){
+           node.nodeValue = vm[name]
+        })
+      }   
+    }
+       if(node.childNodes){
+        node.childNodes.forEach(node=>{
+          compile(node,vm)
+        })
+       }
+  }
+
+
+  function Watcher(vm,fn){
+    this.fn = fn
+  }
+  Watcher.prototype.update = function(){
+    fn()
+  }
+
+  function Dep(){
+    this.subs = []
+  }
+  Dep.prototype.addsub = function(sub){
+    this.subs.push(sub)
+  }
+  </script>
+</body>
+</html>
